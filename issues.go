@@ -30,11 +30,9 @@ type Label struct {
 
 /* Insert functions */
 
-func insertNewIssue(i Issue) (sql.Result, error) {
-	fields := []string{
-		"id", "title", "number", "state", "body", "created_by",
-		"url", "created_at", "updated_at", "closed_at",
-	}
+func insertIssue(i Issue) (sql.Result, error) {
+	fields := GetStructFields(&i)
+	fields = ArrayToSnakeCase(fields[:len(fields)-1])
 	stmt := createInsertStatement("github.issue", fields)
 	return db.Exec(
 		stmt,
@@ -45,7 +43,7 @@ func insertNewIssue(i Issue) (sql.Result, error) {
 }
 
 func insertLabel(l Label) (sql.Result, error) {
-	fields := []string{"id", "label"}
+	fields := ArrayToSnakeCase(GetStructFields(&l))
 	stmt := createInsertStatement("github.label", fields)
 	return db.Exec(stmt, l.ID, l.Label)
 }
@@ -53,21 +51,23 @@ func insertLabel(l Label) (sql.Result, error) {
 func insertIssueLabel(issueID int64, labelID int64) (sql.Result, error) {
 	fields := []string{"issue_id", "label_id"}
 	stmt := createInsertStatement("github.issue_label", fields)
-	return db.Exec(stmt, issueID, labelID)
+	res, err := db.Exec(stmt, issueID, labelID)
+	if err != nil && !isDuplicateKeyError(err) {
+		panic(err)
+	}
+	return res, nil
 }
 
 /* Update functions */
 
-func updateIssue(issue Issue) (sql.Result, error) {
-	fields := []string{
-		"title", "number", "state", "body", "created_by",
-		"url", "created_at", "updated_at", "closed_at",
-	}
-	stmt := createUpdateStatement("github.issue", fields, issue.ID)
+func updateIssue(i Issue) (sql.Result, error) {
+	fields := GetStructFields(&i)
+	fields = ArrayToSnakeCase(fields[1 : len(fields)-1])
+	stmt := createUpdateStatement("github.issue", fields, i.ID)
 	return db.Exec(
-		stmt, issue.Title, issue.Number, issue.State,
-		issue.Body, issue.CreatedBy, issue.URL,
-		issue.CreatedAt, issue.UpdatedAt, issue.ClosedAt,
+		stmt, i.Title, i.Number, i.State,
+		i.Body, i.CreatedBy, i.URL,
+		i.CreatedAt, i.UpdatedAt, i.ClosedAt,
 	)
 }
 
@@ -80,16 +80,22 @@ func updateLabel(label Label) (sql.Result, error) {
 /* Delete functions */
 
 func deleteIssue(issue Issue) {
-	return
+	fmt.Println("Should delete issue.")
+	// TODO: delete issue
+	// Delete all labels with that issue id from issue_labels
 }
 
+/* Insert or update functions */
+
 func insertOrUpdateLabel(l Label) {
+	// FIXME: refactor to remove repeated code
 	_, err := insertLabel(l)
 	if err == nil {
 		fmt.Println("Label inserted successfully.")
 		return
 	}
 	if isDuplicateKeyError(err) {
+		fmt.Println("Label already exists. Updating...")
 		_, err := updateLabel(l)
 		if err == nil {
 			fmt.Println("Label updated successfully.")
@@ -99,28 +105,16 @@ func insertOrUpdateLabel(l Label) {
 	panic(err)
 }
 
-func insertOrUpdateIssueLabel(issueID int64, labelID int64) {
-	_, err := insertIssueLabel(issueID, labelID)
-	if err == nil {
-		fmt.Println("Issue-label relation inserted successfully.")
-		return
-	}
-	if isDuplicateKeyError(err) {
-		fmt.Println("Issue already has label.")
-		return
-	}
-	panic(err)
-}
-
 func insertOrUpdateLabels(i Issue) {
 	for _, l := range i.Labels {
 		insertOrUpdateLabel(l)
-		insertOrUpdateIssueLabel(i.ID, l.ID)
+		insertIssueLabel(i.ID, l.ID)
 	}
 }
 
 func insertOrUpdateIssue(i Issue) {
-	_, err := insertNewIssue(i)
+	// FIXME: refactor to remove repeated code
+	_, err := insertIssue(i)
 	if err == nil {
 		fmt.Println("Issue inserted successfully.")
 		return
@@ -162,6 +156,10 @@ func saveIssueInfo(e github.IssuesEvent) {
 	checkDBConnection()
 	defer db.Close()
 	issue := getIssue(e)
+	if *e.Action == "deleted" {
+		deleteIssue(issue)
+		return
+	}
 	insertOrUpdateIssue(issue)
 	insertOrUpdateLabels(issue)
 }
