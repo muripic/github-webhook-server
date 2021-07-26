@@ -42,11 +42,11 @@ func handleWebHook(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleIssueEvent(e github.IssuesEvent) {
-	fmt.Printf("Issue %s was %s", *e.Issue, *e.Action)
+	saveIssueInfo(e)
 }
 
 func handleIssueCommentEvent(e github.IssueCommentEvent) {
-	fmt.Printf("A comment for issue %s was %s", *e.Issue, *e.Action)
+	fmt.Println(e)
 }
 
 func handlePushEvent(e github.PushEvent) {
@@ -56,9 +56,10 @@ func handlePushEvent(e github.PushEvent) {
 
 func main() {
 	log.Println("Server started")
+	Configure()
 	// FIXME: each endpoint should have its own webhook handler
 	http.HandleFunc("/issues", handleWebHook)
-	// http.HandleFunc("/issues/comments", handleWebhook)
+	http.HandleFunc("/issues/comments", handleWebHook)
 	http.HandleFunc("/pushes", handleWebHook)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
