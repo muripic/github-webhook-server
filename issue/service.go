@@ -10,16 +10,30 @@ import (
 var DBCfg db.DBConfig
 var DB *sql.DB
 
-func SaveIssueToDB(e github.IssuesEvent) {
-	DBCfg = db.LoadDBConfig()
+func setUpDB() {
+	db.LoadDBConfig(&DBCfg)
 	DB = db.ConnectToDB(DBCfg)
-	db.CheckDBConnection(DB)
+}
+
+func SaveIssueToDB(e github.IssuesEvent) {
+	setUpDB()
 	defer DB.Close()
-	issue := getIssue(e)
+	i := getIssue(e)
 	if *e.Action == "deleted" {
-		deleteIssue(issue)
+		deleteIssue(i)
 		return
 	}
-	insertOrUpdateIssue(issue)
-	insertOrUpdateLabels(issue)
+	insertOrUpdateIssue(i)
+	insertOrUpdateLabels(i)
+}
+
+func SaveIssueCommentToDB(e github.IssueCommentEvent) {
+	setUpDB()
+	defer DB.Close()
+	c := getIssueComment(e)
+	if *e.Action == "deleted" {
+		deleteIssueComment(c)
+		return
+	}
+	insertOrUpdateIssueComment(c)
 }

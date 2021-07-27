@@ -45,15 +45,17 @@ func handleWebHook(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleIssueEvent(e github.IssuesEvent) {
+	log.Print("Saving issue info to database...")
 	issue.SaveIssueToDB(e)
 }
 
 func handleIssueCommentEvent(e github.IssueCommentEvent) {
-	fmt.Println(e)
+	log.Print("Saving issue comment info to database...")
+	issue.SaveIssueCommentToDB(e)
 }
 
 func handlePushEvent(e github.PushEvent) {
-	log.Print("Handling push event")
+	log.Print("Handling push event...")
 	push.GetModifiedFiles(e)
 }
 

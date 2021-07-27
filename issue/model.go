@@ -25,23 +25,45 @@ type Label struct {
 	Label string
 }
 
+type IssueComment struct {
+	ID        int64
+	IssueID   int64
+	Body      string
+	CreatedBy string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	URL       string
+}
+
 func getIssue(e github.IssuesEvent) Issue {
-	var issue Issue
-	issue.ID = *e.Issue.ID
-	issue.Title = *e.Issue.Title
-	issue.Number = *e.Issue.Number
-	issue.State = *e.Issue.State
-	issue.Body = *e.Issue.Body
-	issue.CreatedBy = *e.Issue.User.Login
-	issue.URL = *e.Issue.HTMLURL
-	issue.CreatedAt = *e.Issue.CreatedAt
-	issue.UpdatedAt = *e.Issue.UpdatedAt
+	var i Issue
+	i.ID = *e.Issue.ID
+	i.Title = *e.Issue.Title
+	i.Number = *e.Issue.Number
+	i.State = *e.Issue.State
+	i.Body = *e.Issue.Body
+	i.CreatedBy = *e.Issue.User.Login
+	i.URL = *e.Issue.HTMLURL
+	i.CreatedAt = *e.Issue.CreatedAt
+	i.UpdatedAt = *e.Issue.UpdatedAt
 	if *e.Action == "closed" {
-		issue.ClosedAt = *e.Issue.ClosedAt
+		i.ClosedAt = *e.Issue.ClosedAt
 	}
 	for _, l := range e.Issue.Labels {
 		label := Label{*l.ID, *l.Name}
-		issue.Labels = append(issue.Labels, label)
+		i.Labels = append(i.Labels, label)
 	}
-	return issue
+	return i
+}
+
+func getIssueComment(e github.IssueCommentEvent) IssueComment {
+	var c IssueComment
+	c.ID = *e.Comment.ID
+	c.IssueID = *e.Issue.ID
+	c.Body = *e.Comment.Body
+	c.CreatedBy = *e.Comment.User.Login
+	c.CreatedAt = *e.Comment.CreatedAt
+	c.UpdatedAt = *e.Comment.UpdatedAt
+	c.URL = *e.Comment.HTMLURL
+	return c
 }

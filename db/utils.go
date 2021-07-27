@@ -17,10 +17,8 @@ type DBConfig struct {
 	DBName   string
 }
 
-func LoadDBConfig() DBConfig {
-	var cfg DBConfig
-	viper.UnmarshalKey("db", &cfg)
-	return cfg
+func LoadDBConfig(cfg *DBConfig) {
+	viper.UnmarshalKey("db", cfg)
 }
 
 func GetConnectionString(cfg DBConfig) string {
@@ -35,6 +33,7 @@ func ConnectToDB(cfg DBConfig) *sql.DB {
 	if err != nil {
 		panic(err)
 	}
+	CheckDBConnection(DB)
 	return DB
 }
 
@@ -72,4 +71,12 @@ func CreateUpdateStatement(table string, fields []string, id int64) string {
 
 func IsDuplicateKeyError(err error) bool {
 	return strings.Contains(err.Error(), "duplicate key")
+}
+
+func Delete(DB *sql.DB, table string, field string, value interface{}) {
+	stmt := fmt.Sprintf("DELETE FROM %s WHERE %s = $1", table, field)
+	_, err := DB.Exec(stmt, value)
+	if err != nil {
+		panic(err)
+	}
 }
