@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github-webhook-server/config"
+	"github-webhook-server/issue"
+	"github-webhook-server/push"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -42,7 +45,7 @@ func handleWebHook(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleIssueEvent(e github.IssuesEvent) {
-	saveIssueInfo(e)
+	issue.SaveIssueToDB(e)
 }
 
 func handleIssueCommentEvent(e github.IssueCommentEvent) {
@@ -51,12 +54,12 @@ func handleIssueCommentEvent(e github.IssueCommentEvent) {
 
 func handlePushEvent(e github.PushEvent) {
 	log.Print("Handling push event")
-	AnalyzePushEvent(e)
+	push.GetModifiedFiles(e)
 }
 
 func main() {
 	log.Println("Server started")
-	Configure()
+	config.ReadConfig()
 	// FIXME: each endpoint should have its own webhook handler
 	http.HandleFunc("/issues", handleWebHook)
 	http.HandleFunc("/issues/comments", handleWebHook)

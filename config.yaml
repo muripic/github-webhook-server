@@ -4,21 +4,3 @@ db:
   user: admin
   password: changeme
   dbname: issues
-
-push:
-  actions:
-    - run: "function1"
-      branch: master
-      repository: content-gitops
-    - run: "action2"
-      branch: preprod
-      repository: content-gitops
-
-issue:
-  actions:
-    - run: "saveIssueToDB"
-    - run: "addLabel"
-
-issueComment:
-  actions:
-    - run: "saveComment"

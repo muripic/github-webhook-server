@@ -1,4 +1,4 @@
-module github-webhook
+module github-webhook-server
 
 go 1.16
 

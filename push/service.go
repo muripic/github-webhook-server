@@ -1,4 +1,4 @@
-package main
+package push
 
 import (
 	"log"
@@ -29,11 +29,11 @@ func checkBranch(e github.PushEvent) bool {
 	return branch == targetBranch
 }
 
-func AnalyzePushEvent(e github.PushEvent) {
+func GetModifiedFiles(e github.PushEvent) {
 	log.Print("Analyzing push event")
 	if checkRepo(e) && checkBranch(e) {
-		log.Printf("Getting changed files for %s repository", targetRepo)
-		log.Printf("Files changed %s", changedFiles(e))
+		log.Printf("Getting modified files for %s repository", targetRepo)
+		log.Printf("Files modified %s", changedFiles(e))
 		return
 	}
 	log.Printf("Push does not match target repo or target branch")

@@ -1,10 +1,11 @@
-package main
+package db
 
 import (
 	"database/sql"
 	"fmt"
 	"strings"
 
+	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
 )
 
@@ -16,38 +17,36 @@ type DBConfig struct {
 	DBName   string
 }
 
-var db *sql.DB
-var dbConfig DBConfig
-
-func loadDBConfig() {
-	viper.UnmarshalKey("db", &dbConfig)
+func LoadDBConfig() DBConfig {
+	var cfg DBConfig
+	viper.UnmarshalKey("db", &cfg)
+	return cfg
 }
 
-func getConnectionString() string {
-	return fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		dbConfig.Host, dbConfig.Port, dbConfig.User,
-		dbConfig.Password, dbConfig.DBName,
+func GetConnectionString(cfg DBConfig) string {
+	return fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DBName,
 	)
 }
 
-func connectToDB() {
-	var err error
-	db, err = sql.Open("postgres", getConnectionString())
+func ConnectToDB(cfg DBConfig) *sql.DB {
+	DB, err := sql.Open("postgres", GetConnectionString(cfg))
 	if err != nil {
 		panic(err)
 	}
+	return DB
 }
 
-func checkDBConnection() {
-	err := db.Ping()
+func CheckDBConnection(DB *sql.DB) {
+	err := DB.Ping()
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("Connected to database!")
 }
 
-func createInsertStatement(table string, fields []string) string {
+func CreateInsertStatement(table string, fields []string) string {
 	var values []string
 	for i := 1; i <= len(fields); i++ {
 		values = append(values, fmt.Sprintf("$%d", i))
@@ -60,7 +59,7 @@ func createInsertStatement(table string, fields []string) string {
 	)
 }
 
-func createUpdateStatement(table string, fields []string, id int64) string {
+func CreateUpdateStatement(table string, fields []string, id int64) string {
 	var values []string
 	for i, f := range fields {
 		values = append(values, fmt.Sprintf("%s = $%d", f, i+1))
@@ -71,6 +70,6 @@ func createUpdateStatement(table string, fields []string, id int64) string {
 	)
 }
 
-func isDuplicateKeyError(err error) bool {
+func IsDuplicateKeyError(err error) bool {
 	return strings.Contains(err.Error(), "duplicate key")
 }
