@@ -18,7 +18,10 @@ type DBConfig struct {
 }
 
 func LoadDBConfig(cfg *DBConfig) {
-	viper.UnmarshalKey("db", cfg)
+	err := viper.UnmarshalKey("db", cfg)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func GetConnectionString(cfg DBConfig) string {

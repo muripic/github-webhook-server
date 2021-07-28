@@ -39,13 +39,13 @@ func insertLabel(l Label) (sql.Result, error) {
 	return DB.Exec(stmt, l.ID, l.Label)
 }
 
-func insertIssueLabel(issueID int64, labelID int64) (sql.Result, error) {
+func insertIssueLabel(issueID int64, labelID int64) sql.Result {
 	stmt := db.CreateInsertStatement(issueLabelTable, issueLabelFields)
 	res, err := DB.Exec(stmt, issueID, labelID)
 	if err != nil && !db.IsDuplicateKeyError(err) {
 		panic(err)
 	}
-	return res, nil
+	return res
 }
 
 func insertIssueComment(c IssueComment) (sql.Result, error) {
@@ -81,7 +81,9 @@ func updateIssueComment(c IssueComment) (sql.Result, error) {
 /* Delete functions */
 
 func deleteIssue(i Issue) {
+	fmt.Println("Deleting issue comments and labels..")
 	deleteIssueLabels(i)
+	deleteIssueComments(i)
 	fmt.Println("Deleting issue...")
 	db.Delete(DB, issueTable, "id", i.ID)
 	fmt.Println("Issue deleted successfully.")
