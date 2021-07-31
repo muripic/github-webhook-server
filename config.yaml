@@ -1,5 +1,5 @@
 db:
-  host: localhost
+  host: issuesdb
   port: 5432
   user: admin
   password: changeme

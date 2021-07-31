@@ -7,6 +7,7 @@ COPY go.sum ./
 RUN go mod download
 
 COPY main.go ./
+COPY config.yaml ./
 COPY config ./config
 COPY db ./db
 COPY issue ./issue
