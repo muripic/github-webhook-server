@@ -1,0 +1,31 @@
+version: "3"
+services:
+  gws:
+    build: .
+    restart: always
+    ports:
+      - 8080:8080
+  issuesdb:
+    image: postgres:latest
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - issuesdb:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_DB=issues
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=changeme
+  ngrok:
+    image: wernight/ngrok:latest
+    restart: always
+    ports:
+      - 4040:4040
+    environment:
+      - NGROK_AUTH=${NGROK_TOKEN}
+      - NGROK_PORT=gws:8080
+volumes:
+  pgdata:
+  issuesdb:
+    external: true
