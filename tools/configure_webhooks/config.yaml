@@ -1,0 +1,10 @@
+repository: user/repository-name
+token: your token here
+base_url: https://listener-server-url
+hooks:
+  - endpoint: /issues
+    events: [issues]
+  - endpoint: /issues/comments
+    events: [issue_comment]
+  - endpoint: /pushes
+    events: [push]
