@@ -32,11 +32,13 @@ func handleWebHook(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
+	// FIXME: remove switch, refactor function to return event
+	// and call it in specific handlers
 	switch e := event.(type) {
 	case *github.IssuesEvent:
 		handleIssueEvent(*e)
 	case *github.IssueCommentEvent:
-		handleIssueCommentEvent(*e)
+		handleIssueEvent(*e)
 	case *github.PushEvent:
 		handlePushEvent(*e)
 	default:
@@ -44,14 +46,8 @@ func handleWebHook(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleIssueEvent(e github.IssuesEvent) {
-	log.Print("Saving issue info to database...")
-	issue.SaveIssueToDB(e)
-}
-
-func handleIssueCommentEvent(e github.IssueCommentEvent) {
-	log.Print("Saving issue comment info to database...")
-	issue.SaveIssueCommentToDB(e)
+func handleIssueEvent(e interface{}) {
+	issue.SaveIssueDataToDB(e)
 }
 
 func handlePushEvent(e github.PushEvent) {
@@ -64,7 +60,6 @@ func main() {
 	config.ReadConfig()
 	// FIXME: each endpoint should have its own webhook handler
 	http.HandleFunc("/issues", handleWebHook)
-	http.HandleFunc("/issues/comments", handleWebHook)
 	http.HandleFunc("/pushes", handleWebHook)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

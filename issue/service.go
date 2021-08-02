@@ -3,6 +3,7 @@ package issue
 import (
 	"database/sql"
 	"github-webhook-server/db"
+	"log"
 
 	"github.com/google/go-github/github"
 )
@@ -15,7 +16,7 @@ func setUpDB() {
 	DB = db.ConnectToDB(DBCfg)
 }
 
-func SaveIssueToDB(e github.IssuesEvent) {
+func saveIssueToDB(e github.IssuesEvent) {
 	setUpDB()
 	defer DB.Close()
 	i := getIssue(e)
@@ -27,7 +28,7 @@ func SaveIssueToDB(e github.IssuesEvent) {
 	insertOrUpdateLabels(i)
 }
 
-func SaveIssueCommentToDB(e github.IssueCommentEvent) {
+func saveIssueCommentToDB(e github.IssueCommentEvent) {
 	setUpDB()
 	defer DB.Close()
 	c := getIssueComment(e)
@@ -36,4 +37,17 @@ func SaveIssueCommentToDB(e github.IssueCommentEvent) {
 		return
 	}
 	insertOrUpdateIssueComment(c)
+}
+
+func SaveIssueDataToDB(event interface{}) {
+	switch e := event.(type) {
+	case github.IssuesEvent:
+		log.Print("Saving issue info to database...")
+		saveIssueToDB(e)
+	case github.IssueCommentEvent:
+		log.Print("Saving issue comment info to database...")
+		saveIssueCommentToDB(e)
+	default:
+		log.Print("Event type must be issue or issue comment")
+	}
 }
