@@ -64,7 +64,13 @@ class GitRepository:
         self.get()
         logging.info("Creating new hooks for repository %s", config.repository)
         for hook in hooks:
-            self.create_hook(f"{base_url}{hook['endpoint']}", hook["events"])
+            self.create_hook(
+                f"{self._url(base_url, hook['endpoint'])}",
+                hook["events"]
+            )
+
+    def _url(self, base_url: str, endpoint: str) -> str:
+        return base_url.strip("/") + "/" + endpoint.strip("/")
 
     def delete_hooks(self):
         self.get()
